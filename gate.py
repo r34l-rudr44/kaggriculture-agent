@@ -8,7 +8,7 @@ the mapping is revealed only when the pre-registered rule below is applied.
 Suites (all seeds below are the sealed HOLDOUT; development work must never use them):
   farm    each label vs the strong reactive opponent, holdout seeds x both seats (paired)
   ladder  each label in our seat vs the frozen opponents of our real ladder games (ladder_set.json)
-  top     each label vs frozen top-20 tapes (regression check)
+  top     each label vs frozen tapes of top players (old top-20 + sealed top-50 set; dev set excluded)
   duel    label vs label, holdout seeds x both seats
 """
 import argparse, hashlib, json, math, os, random, shutil, sys
@@ -27,8 +27,8 @@ RULE = {
     "ladder_margin_min": -500.0,
     "top_margin_se": 2.0,   # frozen top-20 tapes: not significantly worse (drop < 2 SE)
     "duel_rate_min": 0.55,  # and the 95% Wilson lower bound must exceed 0.50
-    "pool_margin_se": 2.0,  # vs the ladder-archetype population (agents/pool/*.py): gain > 2 SE
-    "pool_member_se": 2.0,  # and no single archetype significantly worse (drop < 2 SE)
+    "pool_margin_se": 2.0,  # vs the validated sparring pool listed in poolset.json: gain > 2 SE
+    "pool_member_se": 2.0,  # and no single pool member significantly worse (drop < 2 SE)
 }
 # -----------------------------------------------------------------------------------------------
 
@@ -127,7 +127,9 @@ def main():
     ladder_file = os.path.join(ROOT, "ladder_set.json")
     ladder_ids = set(json.load(open(ladder_file))) if os.path.exists(ladder_file) else set()
     top_ids = [os.path.basename(f)[:-5] for f in sorted(glob.glob(os.path.join(ROOT, "tapes", "*.json")))]
-    top_ids = [ep for ep in top_ids if ep not in ladder_ids]
+    dev_file = os.path.join(ROOT, "top50_dev.json")
+    dev_ids = set(json.load(open(dev_file))) if os.path.exists(dev_file) else set()
+    top_ids = [ep for ep in top_ids if ep not in ladder_ids and ep not in dev_ids]
 
     seeds = range(HOLDOUT_SEED0, HOLDOUT_SEED0 + HOLDOUT_SEEDS)
     jobs = []
@@ -135,7 +137,9 @@ def main():
         jobs += [("farm", label, path, STRONG, s, seat) for s in seeds for seat in (0, 1)]
         jobs += _ladder_jobs(label, path)
         jobs += [("tape", label, path, ep, 0, seat) for ep in top_ids for seat in (0, 1)]
-    pool_files = sorted(glob.glob(os.path.join(ROOT, "agents", "pool", "*.py")))
+    pool_list = os.path.join(ROOT, "poolset.json")
+    pool_files = [os.path.join(ROOT, f) for f in json.load(open(pool_list))] if os.path.exists(pool_list) else []
+    pool_files = [f for f in pool_files if os.path.exists(f)]
     for label, path in paths.items():
         jobs += [("pool", label, path, f, s, seat) for f in pool_files for s in seeds[:24] for seat in (0, 1)]
     jobs += [("duel", "Y", paths["Y"], paths["X"], s, seat) for s in seeds for seat in (0, 1)]
