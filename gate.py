@@ -2,6 +2,7 @@
 
     python gate.py INCUMBENT.py CANDIDATE.py [--workers 10]
 
+Recorded-game suites pin the town shops to the recording (pinshops.py).
 Both files are copied under neutral labels and every suite treats the two labels identically;
 the mapping is revealed only when the pre-registered rule below is applied.
 
@@ -57,15 +58,19 @@ def _game(job):
     from tourney import load_agent
     _crn(fastsim.K)
     me = load_agent(path)
+    import pinshops
+    pinshops.install(fastsim.K)
     if kind == "tape":
         t = tapes.load(other)
         opp = tapes.TapeAgent(other, 1 - seat)
         seed = t["seed"]
+        pinshops.pin(pinshops.recorded_shops(other))  # keep the recorded town; see pinshops.py
     else:
         opp = load_agent(other)
     agents = [None, None]
     agents[seat], agents[1 - seat] = me, opp
     r, _ = fastsim.play(agents[0], agents[1], seed)
+    pinshops.unpin()
     return kind, label, str(other) if kind == "tape" else os.path.basename(other), seed, seat, r[seat], r[1 - seat]
 
 
