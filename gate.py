@@ -27,6 +27,8 @@ RULE = {
     "ladder_margin_min": -500.0,
     "top_margin_se": 2.0,   # frozen top-20 tapes: not significantly worse (drop < 2 SE)
     "duel_rate_min": 0.55,  # and the 95% Wilson lower bound must exceed 0.50
+    "pool_margin_se": 2.0,  # vs the ladder-archetype population (agents/pool/*.py): gain > 2 SE
+    "pool_member_se": 2.0,  # and no single archetype significantly worse (drop < 2 SE)
 }
 # -----------------------------------------------------------------------------------------------
 
@@ -133,6 +135,9 @@ def main():
         jobs += [("farm", label, path, STRONG, s, seat) for s in seeds for seat in (0, 1)]
         jobs += _ladder_jobs(label, path)
         jobs += [("tape", label, path, ep, 0, seat) for ep in top_ids for seat in (0, 1)]
+    pool_files = sorted(glob.glob(os.path.join(ROOT, "agents", "pool", "*.py")))
+    for label, path in paths.items():
+        jobs += [("pool", label, path, f, s, seat) for f in pool_files for s in seeds[:24] for seat in (0, 1)]
     jobs += [("duel", "Y", paths["Y"], paths["X"], s, seat) for s in seeds for seat in (0, 1)]
 
     with ProcessPoolExecutor(a.workers) as ex:
@@ -147,6 +152,12 @@ def main():
     # unmask
     inc, cand = ("Y", "X") if flip else ("X", "Y")
     res = {s: _paired(suite(s, inc), suite(s, cand)) for s in ("farm", "ladder", "top")}
+    pool_rows = lambda lab: [r for r in rows if r[0] == "pool" and r[1] == lab]
+    res["pool"] = _paired(pool_rows(inc), pool_rows(cand)) if pool_files else {"n": 0}
+    res["pool_members"] = {}
+    for f in pool_files:
+        b = os.path.basename(f)
+        res["pool_members"][b] = _paired([r for r in pool_rows(inc) if r[2] == b], [r for r in pool_rows(cand) if r[2] == b])
     duel = [r for r in rows if r[0] == "duel"]
     y_wins = sum(1 for r in duel if r[5] > r[6])
     y_margin = sum(r[5] - r[6] for r in duel) / max(1, len(duel))
@@ -161,6 +172,8 @@ def main():
                                                 and res["ladder"]["margin_diff"] >= RULE["ladder_margin_min"]),
         "top": res["top"]["margin_diff"] > -RULE["top_margin_se"] * res["top"]["se"],
         "duel": res["duel"]["cand_wins"] / max(1, res["duel"]["n"]) >= RULE["duel_rate_min"] and res["duel"]["wilson_low"] > 0.5,
+        "pool": (res["pool"]["n"] == 0) or (res["pool"]["margin_diff"] > RULE["pool_margin_se"] * res["pool"]["se"]
+                 and all(m["margin_diff"] > -RULE["pool_member_se"] * m["se"] for m in res["pool_members"].values())),
     }
     verdict = "PASS" if all(checks.values()) else "FAIL"
     report = {"incumbent": a.incumbent, "candidate": a.candidate, "results": res, "checks": checks, "verdict": verdict,
@@ -170,6 +183,11 @@ def main():
         r = res[s]
         print(f"{s:6s} n={r['n']:3d} margin inc {r['margin_a']:+8.0f} cand {r['margin_b']:+8.0f}  diff {r['margin_diff']:+7.0f} (SE {r['se']:.0f})"
               f"  wins {r['wins_a']} -> {r['wins_b']}   {'ok' if checks[s] else 'FAIL'}")
+    if res["pool"]["n"]:
+        r = res["pool"]
+        print(f"pool   n={r['n']:3d} margin inc {r['margin_a']:+8.0f} cand {r['margin_b']:+8.0f}  diff {r['margin_diff']:+7.0f} (SE {r['se']:.0f})  wins {r['wins_a']} -> {r['wins_b']}   {'ok' if checks['pool'] else 'FAIL'}")
+        for b, m in res["pool_members"].items():
+            print(f"         {b:28s} diff {m['margin_diff']:+7.0f} (SE {m['se']:.0f})  wins {m['wins_a']} -> {m['wins_b']}")
     d = res["duel"]
     print(f"duel   n={d['n']:3d} candidate wins {d['cand_wins']} ({100*d['cand_wins']/max(1,d['n']):.0f}%), margin {d['cand_margin']:+.0f}, "
           f"Wilson low {d['wilson_low']:.2f}   {'ok' if checks['duel'] else 'FAIL'}")
