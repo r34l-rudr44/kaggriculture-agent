@@ -131,9 +131,13 @@ def main():
     import glob
     ladder_file = os.path.join(ROOT, "ladder_set.json")
     ladder_ids = set(json.load(open(ladder_file))) if os.path.exists(ladder_file) else set()
-    top_ids = [os.path.basename(f)[:-5] for f in sorted([g for g in glob.glob(os.path.join(ROOT, "tapes", "*.json")) if not g.endswith(".shops.json")])]
-    dev_file = os.path.join(ROOT, "top50_dev.json")
-    dev_ids = set(json.load(open(dev_file))) if os.path.exists(dev_file) else set()
+    top_ids = [os.path.basename(f)[:-5] for f in sorted(glob.glob(os.path.join(ROOT, "tapes", "*.json")))
+               if not f.endswith((".shops.json", ".units.json"))]
+    dev_ids = set()
+    for dev_file in ("top50_dev.json", "top50_dev2.json"):  # development tapes never enter the gate
+        dev_file = os.path.join(ROOT, dev_file)
+        if os.path.exists(dev_file):
+            dev_ids |= set(json.load(open(dev_file)))
     top_ids = [ep for ep in top_ids if ep not in ladder_ids and ep not in dev_ids]
 
     seeds = range(HOLDOUT_SEED0, HOLDOUT_SEED0 + HOLDOUT_SEEDS)

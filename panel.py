@@ -33,7 +33,7 @@ def main():
     ap.add_argument("--verbose", action="store_true")
     a = ap.parse_args()
     params = json.loads(a.params) if a.params else None
-    eps = sorted(os.path.basename(f)[:-5] for f in [g for g in glob.glob(os.path.join(ROOT, "tapes", "*.json")) if not g.endswith(".shops.json")])
+    eps = sorted(os.path.basename(f)[:-5] for f in [g for g in glob.glob(os.path.join(ROOT, "tapes", "*.json")) if not g.endswith((".shops.json", ".units.json"))])
     if a.limit:
         eps = eps[: a.limit]
     jobs = [(a.cand, ep, s, params) for ep in eps for s in (0, 1)]

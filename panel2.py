@@ -63,7 +63,7 @@ def main():
     ap.add_argument("--ladder", action="store_true")
     a = ap.parse_args()
     params = json.loads(a.params) if a.params else None
-    eps = sorted(os.path.basename(f)[:-5] for f in [g for g in glob.glob(os.path.join(ROOT, "tapes", "*.json")) if not g.endswith(".shops.json")])
+    eps = sorted(os.path.basename(f)[:-5] for f in [g for g in glob.glob(os.path.join(ROOT, "tapes", "*.json")) if not g.endswith((".shops.json", ".units.json"))])
     ladder_file = os.path.join(ROOT, "ladder_set.json")
     if not a.ladder and os.path.exists(ladder_file):
         held_out = set(json.load(open(ladder_file)))
