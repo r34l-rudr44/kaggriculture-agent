@@ -69,8 +69,16 @@ def _run(job):
     return ep, seat, r[seat], r[1 - seat], t["rewards"][1 - seat], intact
 
 
-def evaluate(path, params, eps, workers):
-    jobs = [(path, params, ep, s) for ep in eps for s in (0, 1)]
+def seats_of(eps, only=None):
+    """(episode, seat) pairs to play: both seats, or only the seats a team of `only` played in the recording."""
+    if not only:
+        return [(ep, s) for ep in eps for s in (0, 1)]
+    import tapes
+    return [(ep, s) for ep in eps for s in (0, 1) if tapes.load(ep)["names"][s] in only]
+
+
+def evaluate(path, params, eps, workers, only=None):
+    jobs = [(path, params, ep, s) for ep, s in seats_of(eps, only)]
     with ProcessPoolExecutor(workers) as ex:
         return {(r[0], r[1]): r for r in ex.map(_run, jobs, chunksize=1)}
 
@@ -84,20 +92,22 @@ def main():
     ap.add_argument("--workers", type=int, default=10)
     ap.add_argument("--tag", default="pinseat")
     ap.add_argument("--keep", default="coins", choices=["coins", "units"])
+    ap.add_argument("--only", default=None, help="comma-separated team names: replay only the seats they played")
     a = ap.parse_args()
     eps = sorted(set(json.load(open(a.set))))
     eps = [e for e in eps if os.path.exists(os.path.join(ROOT, "tapes", f"{e}.json"))]
     params = json.loads(a.params) if a.params else None
+    only = set(a.only.split(",")) if a.only else None
     cache = os.path.join(ROOT, "results", f"pinseat_base_{os.path.basename(a.base)[:-3]}_{os.path.basename(a.set)[:-5]}.json")
     if os.path.exists(cache):
         base = {tuple(json.loads(k)): v for k, v in json.load(open(cache)).items()}
         if a.keep == "units" and any(len(v) < 6 for v in base.values()):
-            base = evaluate(a.base, None, eps, a.workers)
+            base = evaluate(a.base, None, eps, a.workers, only)
             json.dump({json.dumps(list(k)): v for k, v in base.items()}, open(cache, "w"))
     else:
-        base = evaluate(a.base, None, eps, a.workers)
+        base = evaluate(a.base, None, eps, a.workers, only)
         json.dump({json.dumps(list(k)): v for k, v in base.items()}, open(cache, "w"))
-    cand = evaluate(a.cand, params, eps, a.workers)
+    cand = evaluate(a.cand, params, eps, a.workers, only)
     if a.keep == "units":
         keys = [k for k in cand if k in base and cand[k][5] and base[k][5]]
     else:
