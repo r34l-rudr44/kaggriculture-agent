@@ -16,6 +16,19 @@ from concurrent.futures import ProcessPoolExecutor
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
+def read_json(path, tries=5):
+    """json.load that rides out a transient read failure (another program briefly holding the file)."""
+    import time
+    for k in range(tries):
+        try:
+            with open(path) as fh:
+                return json.load(fh)
+        except (OSError, ValueError):
+            if k == tries - 1:
+                raise
+            time.sleep(0.2 * (k + 1))
+
+
 def _units(state, seat):
     import ledger
     fid = id(state[0].observation.farms[seat])
@@ -29,7 +42,7 @@ def _recorded_units(ep):
     import fastsim, tapes, pinshops, ledger
     cache = os.path.join(ROOT, "tapes", f"{ep}.units.json")
     if os.path.exists(cache):
-        return json.load(open(cache))
+        return read_json(cache)
     t = tapes.load(ep)
     pinshops.pin(pinshops.recorded_shops(ep))
     ledger.LOG.clear()

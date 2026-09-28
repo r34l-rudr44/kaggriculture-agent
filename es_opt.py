@@ -72,7 +72,16 @@ def _crn(K, on):
     _WEED_DRAWS.clear()
 
 
-def _game(job):
+def _game(job, tries=3):
+    for k in range(tries):
+        try:
+            return _play(job)
+        except OSError:  # a transient file error must not end a day-long search
+            if k == tries - 1:
+                raise
+
+
+def _play(job):
     kind, agent_path, params, spec = job
     sys.path.insert(0, ROOT)
     os.chdir(ROOT)
@@ -108,6 +117,7 @@ def main():
     ap.add_argument("--seed0", type=int, default=16000)
     ap.add_argument("--workers", type=int, default=10)
     ap.add_argument("--tag", default="es")
+    ap.add_argument("--resume", action="store_true", help="continue from the mean and step sizes last logged under --tag")
     a = ap.parse_args()
     rng = random.Random(7)
     agent = os.path.join(ROOT, a.agent)
@@ -143,18 +153,30 @@ def main():
     defaults = mod.DEFAULT_PARAMS
     mean = encode({n: defaults[n] for n, *_ in SPACE})
     sig = [a.sigma] * len(SPACE)
-    base_f = evaluate([None])[0]
     log_path = os.path.join(ROOT, "results", f"es_{a.tag}.jsonl")
-    best = {"f": base_f[0], "seat": base_f[1], "pool": base_f[2], "params": decode(mean), "gen": 0}
-    with open(log_path, "a") as fh:
-        fh.write(json.dumps({"gen": 0, "baseline": base_f, "n_seat": len(seat_specs), "n_pool": len(pool_specs),
-                             "args": vars(a)}) + "\n")
-    print(f"baseline f={base_f[0]:.0f} seat={base_f[1]:.0f} pool={base_f[2]:.0f} (seat games {len(seat_specs)}, pool games {len(pool_specs)})", flush=True)
+    start = 1
+    if a.resume:
+        log = [json.loads(l) for l in open(log_path)]
+        base_f = log[0]["baseline"]
+        last = log[-1]
+        mean, sig, start = encode(last["mean_params"]), last["sigma"], last["gen"] + 1
+        best_path = os.path.join(ROOT, "results", f"es_{a.tag}_best.json")
+        best = json.load(open(best_path)) if os.path.exists(best_path) else \
+            {"f": base_f[0], "seat": base_f[1], "pool": base_f[2], "params": decode(mean), "gen": 0}
+        rng = random.Random(7 + start)
+        print(f"resumed at gen {start}, best so far {best['f']:.0f}", flush=True)
+    else:
+        base_f = evaluate([None])[0]
+        best = {"f": base_f[0], "seat": base_f[1], "pool": base_f[2], "params": decode(mean), "gen": 0}
+        with open(log_path, "a") as fh:
+            fh.write(json.dumps({"gen": 0, "baseline": base_f, "n_seat": len(seat_specs), "n_pool": len(pool_specs),
+                                 "args": vars(a)}) + "\n")
+        print(f"baseline f={base_f[0]:.0f} seat={base_f[1]:.0f} pool={base_f[2]:.0f} (seat games {len(seat_specs)}, pool games {len(pool_specs)})", flush=True)
 
     half = a.pop // 2
     wts = [math.log(half + 0.5) - math.log(i + 1) for i in range(half)]
     wts = [w / sum(wts) for w in wts]
-    for gen in range(1, a.gens + 1):
+    for gen in range(start, a.gens + 1):
         cands = []
         for _ in range(half):
             eps_v = [rng.gauss(0, 1) for _ in SPACE]

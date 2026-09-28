@@ -11,11 +11,24 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 _PIN = {"shops": None}
 
 
+def read_json(path, tries=5):
+    """json.load that rides out a transient read failure (another program briefly holding the file)."""
+    import time
+    for k in range(tries):
+        try:
+            with open(path) as fh:
+                return json.load(fh)
+        except (OSError, ValueError):
+            if k == tries - 1:
+                raise
+            time.sleep(0.2 * (k + 1))
+
+
 def recorded_shops(ep):
     """Shop list at the start of every day of the recorded game (cached next to the tape)."""
     cache = os.path.join(ROOT, "tapes", f"{ep}.shops.json")
     if os.path.exists(cache):
-        return json.load(open(cache))
+        return read_json(cache)
     import fastsim, tapes
     t = tapes.load(ep)
     _PIN["shops"] = None

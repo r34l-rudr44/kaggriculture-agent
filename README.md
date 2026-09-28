@@ -9,8 +9,9 @@ most coins after 720 turns wins.
 
 | File | Description |
 |---|---|
-| `agents/v10.py` | Current best. `v8` plus evening crews and batched tile visits, a corrected supply forecast for herd buying, extra fertilizer doses on wheat, and sales timed right after town consumption. |
-| `agents/v8.py` | Previous best. A day-by-day market model of every product (town demand, both farms' visible pipelines, rival stock) drives herd size, a second melon crop and sale timing; the full hiring schedule runs through day 27; the last day uses a coin-valued sweep and a timed final sale. |
+| `agents/v12.py` | Current best. `v10` plus sell lists race-ordered against the rival's stock at every step, fertilizer pickups net of what the herd pens hold, a goose cap that grows with egg shops, and market/herd weights retuned by `es_opt.py`. |
+| `agents/v10.py` | Previous best. `v8` plus evening crews and batched tile visits, a corrected supply forecast for herd buying, extra fertilizer doses on wheat, and sales timed right after town consumption. |
+| `agents/v8.py` | Earlier version. A day-by-day market model of every product (town demand, both farms' visible pipelines, rival stock) drives herd size, a second melon crop and sale timing; the full hiring schedule runs through day 27; the last day uses a coin-valued sweep and a timed final sale. |
 | `agents/v7.py` | Earlier version. `v6` plus a ring layout opening with cash-sized day-0 orders, melon race priority, a day-by-day strawberry market forecast for planting, and a day-1 melon top-up. |
 | `agents/v6.py` | Earlier version. `v5_script` plus midnight overflow couriers, retuned demand model, rival-sales tracking with race selling, order-book optimization of premium sales, premium rush. |
 | `agents/v5_script.py` | Scripted all-in opening (2 cows + 3 sheep around the shed, care from day 0), state-driven days 1-10, demand-sized strawberries/tomatoes, shop-driven herd, burst job engine. |
@@ -33,12 +34,26 @@ top-level `agent(obs, config)` (Kaggle runs the last callable in the file).
 | `h2h.py` | Paired head-to-head vs reactive agents in both seats (common random numbers); `--cmp A.json B.json` compares two runs. |
 | `ledger.py` | Exact per-product revenue/cost ledger of a game. |
 | `validate.py` | Loads a file the way Kaggle does, plays full games, checks errors and timing. |
-| `pinshops.py`, `pinseat.py` | Pin the town shops of a recorded game (the engine draws shops from the weed RNG) and run the pinned seat test against top players. |
+| `pinshops.py`, `pinseat.py` | Pin the town shops of a recorded game (the engine draws shops from the weed RNG) and run the pinned seat test against top players. `--keep units` drops only games whose frozen side's recording broke; `--only TEAM` replays one team's seats (e.g. our ladder losses). |
+| `es_opt.py` | Evolution-strategy parameter search on the seat test and the sparring pool (soft-win score, `--resume`). |
 | `poolbt.py` | Round-robin population rating (Bradley-Terry). |
 | `gate.py` | Blind promotion gate on sealed holdout seeds (strong opponent, our ladder opponents, top-20 tapes, duel) with a pre-registered rule. |
+| `fetch_top.py` | Downloads top-50 players' recent games into development and sealed tape sets. |
 | `fetch_ladder.py` | Downloads our recent ladder games to build the ladder-opponent suite (`ladder_set.json`). |
 | `prep_submit.py` | Static checks plus an official-engine smoke test in an empty directory; writes `submission/main.py`. |
 | `fetch_replays.py`, `summarize_replay.py` | Download top-player replays (Kaggle CLI) and condense them into per-day summaries. |
+
+## Scouting and analysis (`scout/`)
+
+| Tool | Purpose |
+|---|---|
+| `scout.py` | `top N`: recent wins and losses of the current top-10 teams; `losses`: every ladder loss of our live submissions. Both become tapes. |
+| `fingerprint.py` | Replays every tape and records about a hundred strategy features per player (openings, farm mix over time, land, hires, spending, sale timing, labour). |
+| `learn.py` | Paired win model over the fingerprints (cross-validated logistic regression, feature win rates). |
+| `top10.py`, `v12_in_top10.py` | Top-10 players vs our agent in the same seats; what separates top-10 wins from losses. |
+| `cmp_fp.py`, `pair_ledger.py` | Two agents in the same seats: strategy features and per-product ledgers side by side. |
+| `fidelity.py` | Replays our recorded ladder games locally and checks that every action matches Kaggle's. |
+| `track.py`, `record.py`, `ladder_strength.py` | Ladder snapshot, win/loss record, and the rating our games imply given opponent strength. |
 
 ## Setup
 
