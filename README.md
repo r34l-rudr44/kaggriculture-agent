@@ -66,5 +66,6 @@ python panel.py agents/v6.py --workers 8
 
 ## Docs
 
-- `docs/PLAYBOOK.md`: consensus playbook of top agents, from re-simulated top-20 replays.
-- `docs/STRATEGY.md`: detailed engine facts, economics, and the implementation plan.
+- `CONTRIBUTING.md`: code conventions, data hygiene and the evaluation protocol.
+- `docs/ARCHITECTURE.md`: how the agent works, the evaluation stack, every version and experiment with its numbers, and where to start.
+- `docs/PLAYBOOK.md`, `docs/STRATEGY.md`: early notes from the v5 era (historical).
