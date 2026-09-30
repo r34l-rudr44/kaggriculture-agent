@@ -9,5 +9,6 @@ submission/
 # Scratch work and caches
 agents/scratch_*/
 __pycache__/
+.venv/
 *.pyc
 external/

@@ -8,7 +8,8 @@ subprocess.run([sys.executable, "-m", "kaggle.cli", "competitions", "leaderboard
 zipfile.ZipFile(glob.glob(os.path.join(d, "*.zip"))[0]).extractall(d)
 lb = {r["TeamName"]: float(r["Score"]) for r in csv.DictReader(open(glob.glob(os.path.join(d, "*.csv"))[0], encoding="utf-8"))}
 api = KaggleApi(); api.authenticate()
-for sub, name in ((56617571, "v10"), (56630707, "v12")):
+SUBS = [(int(a.split("=")[0]), a.split("=")[1]) for a in sys.argv[1:]] or [(56617571, "v10"), (56630707, "v12")]
+for sub, name in SUBS:
     games = []
     for e in api.competition_list_episodes(sub):
         me = [a for a in e.agents if a.submission_id == sub]; op = [a for a in e.agents if a.submission_id != sub]

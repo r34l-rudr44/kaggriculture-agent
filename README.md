@@ -9,7 +9,9 @@ most coins after 720 turns wins.
 
 | File | Description |
 |---|---|
-| `agents/v12.py` | Current best. `v10` plus sell lists race-ordered against the rival's stock at every step, fertilizer pickups net of what the herd pens hold, a goose cap that grows with egg shops, and market/herd weights retuned by `es_opt.py`. |
+| `agents/v14.py` | Current best, live with the v10 copy as the final pair. `v13` plus a market book that lists every sell first and places wheat orders against the rival's flow at each step of the draw cycle, and strawberry plantings that count the revenue they take from the rival. |
+| `agents/v13.py` | Previous version. v12 plus wheat carried through the town's draws. |
+| `agents/v12.py` | Previous candidate. `v10` plus sell lists race-ordered against the rival's stock at every step, fertilizer pickups net of what the herd pens hold, a goose cap that grows with egg shops, and market/herd weights retuned by `es_opt.py`. |
 | `agents/v10.py` | Previous best. `v8` plus evening crews and batched tile visits, a corrected supply forecast for herd buying, extra fertilizer doses on wheat, and sales timed right after town consumption. |
 | `agents/v8.py` | Earlier version. A day-by-day market model of every product (town demand, both farms' visible pipelines, rival stock) drives herd size, a second melon crop and sale timing; the full hiring schedule runs through day 27; the last day uses a coin-valued sweep and a timed final sale. |
 | `agents/v7.py` | Earlier version. `v6` plus a ring layout opening with cash-sized day-0 orders, melon race priority, a day-by-day strawberry market forecast for planting, and a day-1 melon top-up. |

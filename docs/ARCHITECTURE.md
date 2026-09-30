@@ -219,3 +219,61 @@ They sell premium goods all day, rather than mostly at hour 0.
 3. Confirm on a set the change was not tuned on.
 4. Run the gate.
 5. Decide on the submission with the gate numbers in hand.
+
+## 8. v14 (live since 2026-09-30) and the last day's findings
+
+`agents/v14.py` = v13 plus two levers. It passed the blind gate against v13 on every suite:
+
+| Suite | Result |
+|---|---|
+| Strong reactive bot | +1242 (SE 234) |
+| Pool | +898 (SE 140); every bot better on margin |
+| Top-player tapes | +890 |
+| Old ladder opponents | +889 |
+| Duel | 93-3 |
+
+It was submitted as `56706837`. The final pair is v14 + the v10 copy (`56667699`).
+
+**1. Order position (`arrange`, `order_layout` 4, `race_model` 1).**
+
+How the engine processes orders:
+- Both players' lists are processed slot by slot.
+- Sells and wheat/fertilizer buys commit unit by unit at a shared price, so an order interacts only with the rival's orders for the same product. Position moves coins from one player to the other.
+
+What v14 does:
+- It lists every sell before hires, land, animals and seeds, and wheat buys last.
+- `track_wheat` learns the rival's net wheat flow at each step of the 4-step draw cycle. Each wheat order goes right after the steep sells when the rival usually moves wheat the same way, and last when it moves the other way.
+- The steep sells race the rival's held goods, assuming it lists them in any order. v13 had assumed wool, then milk, then strawberry.
+
+Results: duel against v13 32-0 on development seeds; ladder_set +406 (2.9 SE); top-10 seats +53 (SE 17).
+
+Known imprecision: `wheat_net` under-counts our own draw-trade sale at the step after each draw, so the tracker books it as rival flow. Fixing it changed nothing against farm2945 and has not been measured elsewhere.
+
+**2. Rival-aware strawberry planting (`book_rival_w` 0.25).**
+- The strawberry book now credits a quarter of the revenue a new bush takes from the rival, as the herd books already did with `herd_rival_weight`.
+- Against farm2945, which always runs 33 bushes: +734 (seed-level SE 224) over 100 fresh seeds.
+- Our own coins fall slightly (about -250). The gain comes from the rival earning less.
+
+**Rejected on the last day** (verified on fresh data):
+
+| Lever | Result |
+|---|---|
+| No second melon crop | -2749; that crop is worth about +2.9k of our own coins |
+| Top-10 melon profile | Pool collapsed |
+| Early geese and cows | Margin not confirmed |
+| Deadline/value scheduler | Weight 0.15 is about 0 on normal seats; weight 0.5 with growth regressed (Codex's attempt, -2444) |
+| Wheat-flow dead zone 0 | -100 on a fresh block |
+| `book_alt` 25 on v14 | -21 against farm2945; a small, uncertain gain elsewhere |
+| Fewer hires, caring when prices are low, earlier strawberries or tomatoes | All negative against farm2945 |
+
+**Measurement caveat for seat tests (important):**
+- In about a third of intact seats, the frozen rival earns more than 10k above its recording when it faces v13.
+- Almost any change gains on those seats, so raw seat-test means carry a perturbation premium of about +600.
+- Judge a lever by its own-coin diff, median or winsorized means, the within-10k subset, and h2h and gate results, not by the raw mean alone.
+
+**Open fragility:**
+- In some games v14 reaches day 10 with about 10 coins, so the hour-0 hires depend on tiny sales.
+- One development game got 4 hands instead of 12 and lost about 11.6k.
+- A cash-safe hire reserve could remove these tails.
+
+**Scale of the remaining gap:** in recent top-10 seats v13 trailed by about 20k per game, with 0 of 99 intact wins. The levers above add about 1-2k against strong play. The structural gap is labour and volume, and it remains open.

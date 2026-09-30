@@ -15,6 +15,7 @@ line = (f"{time.strftime('%Y-%m-%d %H:%M')} IST  " + "  ".join(f"{k} {v}" for k,
         + f"  | rank {rank}/{len(lb)}  #50 {lb[49]['Score']}  #100 {lb[99]['Score']}")
 print(line)
 open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results", "track.log"), "a").write(line + "\n")
-rec = subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), "record.py"), "56630707", "0"],
-                     capture_output=True, text=True, env=env).stdout.strip()
-print("v12 ladder record:", rec)
+for sub, name in (("56706837", "v14"), ("56667699", "v10 copy")):
+    rec = subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), "record.py"), sub, "0"],
+                         capture_output=True, text=True, env=env).stdout.strip()
+    print(f"{name} ladder record:", rec)
