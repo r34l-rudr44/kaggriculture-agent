@@ -7,7 +7,7 @@ from kaggle.api.kaggle_api_extended import KaggleApi
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(ROOT)
 ENV = dict(os.environ, PYTHONIOENCODING="utf-8")
-OURS = {56617571: "v10", 56630707: "v12", 56667675: "v13", 56667699: "v10copy", 56706837: "v14"}
+OURS = {56617571: "v10", 56630707: "v12", 56667675: "v13", 56667699: "v10copy", 56706837: "v14", 56714146: "v15", 56714161: "v10final"}
 SEALED = set(json.load(open("top50_seal.json")))
 api = KaggleApi(); api.authenticate()
 
