@@ -111,7 +111,10 @@ def main():
     eps = [e for e in eps if os.path.exists(os.path.join(ROOT, "tapes", f"{e}.json"))]
     params = json.loads(a.params) if a.params else None
     only = set(a.only.split(",")) if a.only else None
-    cache = os.path.join(ROOT, "results", f"pinseat_base_{os.path.basename(a.base)[:-3]}_{os.path.basename(a.set)[:-5]}.json")
+    # the cache is keyed on the base file's content, so an edited base agent never reuses a stale baseline
+    import hashlib
+    tag = hashlib.sha1(open(a.base, "rb").read()).hexdigest()[:8]
+    cache = os.path.join(ROOT, "results", f"pinseat_base_{os.path.basename(a.base)[:-3]}_{tag}_{os.path.basename(a.set)[:-5]}.json")
     if os.path.exists(cache):
         base = {tuple(json.loads(k)): v for k, v in json.load(open(cache)).items()}
         if a.keep == "units" and any(len(v) < 6 for v in base.values()):
