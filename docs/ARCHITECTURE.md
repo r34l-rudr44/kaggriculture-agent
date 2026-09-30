@@ -277,3 +277,33 @@ Known imprecision: `wheat_net` under-counts our own draw-trade sale at the step 
 - A cash-safe hire reserve could remove these tails.
 
 **Scale of the remaining gap:** in recent top-10 seats v13 trailed by about 20k per game, with 0 of 99 intact wins. The levers above add about 1-2k against strong play. The structural gap is labour and volume, and it remains open.
+
+## 9. v15, the final submission (2026-09-30)
+
+`agents/v15.py` = v14 plus three fixes found by the code audit. Each is behind a parameter; with all three off, it plays exactly like v14.
+
+- **`cash_floor` 1 (hour 1+).** When an hour's hires cannot be paid, sell the feed and fertilizer reserves and list the cheap sells ahead of the hires. Some games had spent everything on the day-6 herd buy and hired no hands on day 7.
+- **`mid_guard` 1.** The hour-23 overflow sale counts this step's harvests, collections and pickups. Any yield that still cannot fit stays on its tile, instead of being destroyed by the midnight drop. This used to cost about 900 coins per game.
+- **`feed_first` 1.** The feed wheat buy goes right after the hires, ahead of land, animal and seed buys.
+
+Results against v14:
+- Development data:
+  - farm2945: +1066 (SE 160), own coins +584.
+  - Fresh top-50 seat test: +1076, own coins +296.
+  - v14's 6 ladder losses: 4 turned into wins.
+  - Duel: 55-5.
+- Gate PASS on every suite:
+  - farm2945: +1113, wins 85 -> 91.
+  - Old ladder opponents: +1347.
+  - Top-player tapes: +971.
+  - Pool: +512, all 5 bots.
+  - Duel: 85-11.
+
+The final pair is v15 + the re-submitted v10.
+
+v16 was tried and rejected. It fixed the day-28 half-production drop in `crop_sales` (`book_tail`). Duel vs v15: 19-25. v14's losses went 4 -> 2 wins. Seat test +43. Not submitted.
+
+Ladder diagnosis, for later work:
+- v12, v13 and v14 stalled around 1700-2000 on upset losses to low-rated teams running the public 2945 bot, which grows 33 strawberry bushes by day 15.
+- Our books then forecast a crowded strawberry market and retreat to cheaper crops.
+- The long-term fix is a planner that sizes the day's work and the farm together. Measured gap to the top 10: 153 vs 127 useful actions per day, about 14k mid-game revenue, and about 20k per game in top-10 seats.
