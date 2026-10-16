@@ -5,7 +5,7 @@ Agent and evaluation tooling for the Kaggle simulation competition
 where each player runs a 10x10 farm, both sell into one shared market, and the player with the
 most coins after 720 turns wins.
 
-**Result: silver medal.**
+**Result: silver medal — 321st of 10,148 teams** (final rating 2250.7).
 
 ## Approach
 
