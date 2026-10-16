@@ -5,6 +5,16 @@ Agent and evaluation tooling for the Kaggle simulation competition
 where each player runs a 10x10 farm, both sell into one shared market, and the player with the
 most coins after 720 turns wins.
 
+## Approach
+
+The agents are hand-written policies developed in numbered versions. Each version starts from its
+predecessor, puts every change behind a parameter whose default reproduces the parent exactly, and is
+promoted only after a blind gate on sealed holdout data. Strategy came from measurement rather than
+guesswork: public game replays of strong players were re-simulated locally, fingerprinted into
+strategy features, and compared against our own play in the same seats to find where coins were
+being lost. `docs/ARCHITECTURE.md` records every version and every experiment, including the ones
+that failed.
+
 ## Agents
 
 | File | Description |
@@ -66,6 +76,13 @@ python fetch_replays.py 3      # needs Kaggle API credentials; top30.json lists 
 python tapes.py build          # builds tapes/ from replays/
 python panel.py agents/v6.py --workers 8
 ```
+
+Set `KAGG_TEAM_NAME` to your Kaggle display name so `gate.py` and the `scout/` tools can identify
+your own seat in recorded games.
+
+Not part of the repo: `external/` (third-party public bots, used as black-box sparring opponents and
+not redistributed here) and the generated `replays/`, `tapes/`, `results/` and `submission/`
+directories.
 
 ## Docs
 
