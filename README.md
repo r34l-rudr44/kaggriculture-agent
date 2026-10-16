@@ -5,6 +5,8 @@ Agent and evaluation tooling for the Kaggle simulation competition
 where each player runs a 10x10 farm, both sell into one shared market, and the player with the
 most coins after 720 turns wins.
 
+**Result: silver medal.**
+
 ## Approach
 
 The agents are hand-written policies developed in numbered versions. Each version starts from its
@@ -89,3 +91,7 @@ directories.
 - `CONTRIBUTING.md`: code conventions, data hygiene and the evaluation protocol.
 - `docs/ARCHITECTURE.md`: how the agent works, the evaluation stack, every version and experiment with its numbers, and where to start.
 - `docs/PLAYBOOK.md`, `docs/STRATEGY.md`: early notes from the v5 era (historical).
+
+## License
+
+MIT, see `LICENSE`.
